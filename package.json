@@ -1,0 +1,28 @@
+{
+  "name": "states.js",
+  "version": "0.1.0",
+  "description": "A ranged states iteration tool",
+  "main": "states.min.js",
+  "dependencies": {
+    "types.js": "*"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/phazelift/states.js"
+  },
+  "keywords": [
+    "states",
+    "stepper",
+    "looper",
+    "range"
+  ],
+  "author": "Dennis Raymondo <phazelift@gmail.com> (https://github.com/phazelift/)",
+  "license": "GPL-3",
+  "bugs": {
+    "url": "https://github.com/phazelift/states.js/issues"
+  },
+  "homepage": "https://github.com/phazelift/states.js"
+}
