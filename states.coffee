@@ -68,8 +68,10 @@ class States
 			# only call @setMax after @min, @current and @stepSize are set
 			@setMax init['max'] or @min
 
+			# @pattern defaults to 'limit'
+			@setPattern( init['pattern'], ALL_PATTERNS[0] )
+
 			@up						= _.forceBoolean init['up'], true
-			@pattern			= @setPattern()
 
 			# default the interval to 1 sec
 			@delay				= _.forceNumber init['delay'], 1000
@@ -113,12 +115,8 @@ class States
 		setPattern: ( pattern ) ->
 			pattern= _.forceString pattern
 			if pattern in ALL_PATTERNS
-				@pattern= '_'+ pattern
-				return pattern
-			else
-				@pattern= '_limit'
-				return 'limit'
-
+				@pattern= pattern
+			return @pattern
 
 
 		setCurrent: ( newCurrent ) ->
@@ -129,11 +127,11 @@ class States
 
 
 
-		_limit: ( step ) -> limit @current+ step, @min, @max
+		limit: ( step ) -> limit @current+ step, @min, @max
 
 
 
-		_rotate: ( step ) ->
+		rotate: ( step ) ->
 			current= @current+ step
 			if current < @min
 				return @max- ( @min- (current+ 1) )
@@ -143,7 +141,7 @@ class States
 
 
 
-		_yoyo: ->
+		yoyo: ->
 			if @range is @stepSize
 				if @up
 					return @max
@@ -168,7 +166,7 @@ class States
 
 
 		# TODO: add spread from @stepSize, so @stepSize becomes the minimum distance between two values
-		_random: -> @current= ( (Math.random( @range )* @range) | 0 )+ @min
+		random: -> @current= ( (Math.random( @range )* @range) | 0 )+ @min
 
 
 
@@ -241,7 +239,7 @@ class States
 		prevCall: ( args... ) -> @call @prev(), args
 
 
-
+	# TODO: refactor
 		run: ( index ) ->
 			down= index < 0
 			if not @interval

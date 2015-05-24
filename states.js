@@ -37,8 +37,8 @@
       this.stepSize = _.forceNumber(init['stepSize'], 1);
       this.range = 1;
       this.setMax(init['max'] || this.min);
+      this.setPattern(init['pattern'], ALL_PATTERNS[0]);
       this.up = _.forceBoolean(init['up'], true);
-      this.pattern = this.setPattern();
       this.delay = _.forceNumber(init['delay'], 1000);
       this.events = {};
       this.defaultEvent = function() {
@@ -83,12 +83,9 @@
     States.prototype.setPattern = function(pattern) {
       pattern = _.forceString(pattern);
       if (indexOf.call(ALL_PATTERNS, pattern) >= 0) {
-        this.pattern = '_' + pattern;
-        return pattern;
-      } else {
-        this.pattern = '_limit';
-        return 'limit';
+        this.pattern = pattern;
       }
+      return this.pattern;
     };
 
     States.prototype.setCurrent = function(newCurrent) {
@@ -99,11 +96,11 @@
       return this.current = limit(newCurrent, this.min, this.max);
     };
 
-    States.prototype._limit = function(step) {
+    States.prototype.limit = function(step) {
       return limit(this.current + step, this.min, this.max);
     };
 
-    States.prototype._rotate = function(step) {
+    States.prototype.rotate = function(step) {
       var current;
       current = this.current + step;
       if (current < this.min) {
@@ -115,7 +112,7 @@
       return current;
     };
 
-    States.prototype._yoyo = function() {
+    States.prototype.yoyo = function() {
       var next, prev;
       if (this.range === this.stepSize) {
         if (this.up) {
@@ -141,7 +138,7 @@
       return prev;
     };
 
-    States.prototype._random = function() {
+    States.prototype.random = function() {
       return this.current = ((Math.random(this.range) * this.range) | 0) + this.min;
     };
 
