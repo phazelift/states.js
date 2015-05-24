@@ -1,6 +1,6 @@
 # states.js - A range iteration tool, written in Coffeescript.
 #
-#	States is a ranged states iteration tool:
+#	Features:
 #
 # 	- very robust; cannot exeed range bounds
 # 	- dynamically adjust step-size, range, position etc..
@@ -29,10 +29,14 @@
 
 
 # get types.js
-if not _= window?.Types
+if ( window? )
+	_= window.Types
+else if module?
 	_= require 'types.js'
 
-return if not _
+# types.js is required, throw if not found
+if not _
+	throw new Error 'states.js cannot initialize, the required types.js was not found!'
 
 
 
@@ -40,6 +44,8 @@ return if not _
 class States
 
 	# private
+
+		ALL_PATTERNS= [ 'limit', 'rotate', 'yoyo', 'random' ]
 
 		limit= ( value, min, max ) ->
 			return max if value > max
@@ -52,22 +58,24 @@ class States
 
 		constructor: ( init ) ->
 
-			init			= _.forceObject init
-			@min			= _.forceNumber init['min'], 1
-			@current	= _.forceNumber init['current'], @min
-			@stepSize	= _.forceNumber init['stepSize'], 1
+			init					= _.forceObject init
+			@min					= _.forceNumber init['min'], 1
+			@current			= _.forceNumber init['current'], @min
+			@stepSize			= _.forceNumber init['stepSize'], 1
+			@range				= 1
 
-			# @setMax calls @updateRange to adust @min, @current, @range and @stepSize to the new 'max'
+			# @setMax calls @_updateRange to adust @min, @current, @range and @stepSize to the new 'max'
 			# only call @setMax after @min, @current and @stepSize are set
 			@setMax init['max'] or @min
 
-			@up				= _.forceBoolean init['up'], true
-			@pattern	= _.forceString init['pattern'], 'limit'
+			@up						= _.forceBoolean init['up'], true
+			@pattern			= @setPattern()
 
 			# default the interval to 1 sec
-			@delay		= _.forceNumber init['delay'], 1000
-			@events		= {}
-			@defaultEvent= -> ''
+			@delay				= _.forceNumber init['delay'], 1000
+			@events				= {}
+			@defaultEvent	= -> ''
+			@lastCallResult	= undefined
 
 
 
@@ -75,7 +83,7 @@ class States
 
 
 
-		updateRange: ->
+		_updateRange: ->
 			@current	= limit @current, @min, @max
 			@range		= (@max+ 1)- @min
 			@setStep()
@@ -87,7 +95,7 @@ class States
 			newMin= _.forceNumber newMin
 			if not newMin.void
 				@min= limit newMin, newMin, @max
-				@updateRange()
+				@_updateRange()
 			return @min
 
 
@@ -97,8 +105,19 @@ class States
 			if not newMax.void
 				@max= newMax
 				@min= limit @min, @min, @max
-				@updateRange()
+				@_updateRange()
 			return @max
+
+
+
+		setPattern: ( pattern ) ->
+			pattern= _.forceString pattern
+			if pattern in ALL_PATTERNS
+				@pattern= '_'+ pattern
+				return pattern
+			else
+				@pattern= '_limit'
+				return 'limit'
 
 
 
@@ -110,11 +129,11 @@ class States
 
 
 
-		limit: ( step ) -> limit @current+ step, @min, @max
+		_limit: ( step ) -> limit @current+ step, @min, @max
 
 
 
-		rotate: ( step ) ->
+		_rotate: ( step ) ->
 			current= @current+ step
 			if current < @min
 				return @max- ( @min- (current+ 1) )
@@ -124,7 +143,7 @@ class States
 
 
 
-		yoyo: ->
+		_yoyo: ->
 			if @range is @stepSize
 				if @up
 					return @max
@@ -149,19 +168,20 @@ class States
 
 
 		# TODO: add spread from @stepSize, so @stepSize becomes the minimum distance between two values
-		random: -> @current= ( (Math.random( @range )* @range) | 0 )+ @min
+		_random: -> @current= ( (Math.random( @range )* @range) | 0 )+ @min
 
 
 
-		peek: ( amount ) ->
-			switch amount
-				when undefined 	then amount= @stepSize
-				when false 			then amount= -@stepSize
+		# peek returns the 'next' index based on the actual pattern, step and direction
+		peek: ( step ) ->
+			switch step
+				when undefined 	then step= @stepSize
+				when false 			then step= -@stepSize
 				else do =>
-					amount= _.forceNumber amount, 0
-					if (Math.abs amount) >= @range
-						amount= 0
-			return @[ @pattern ] amount
+					step= _.forceNumber step, 0
+					if (Math.abs step) >= @range
+						step= 0
+			return @[ @pattern ] step
 
 
 
@@ -196,7 +216,9 @@ class States
 
 
 
-		addEvent: ( index, callback ) -> @events[ index ]= callback
+		addEvent: ( index, callback ) ->
+			@events[ index ]= callback
+			return index >= @min <= @max
 
 
 
@@ -221,15 +243,14 @@ class States
 
 
 		run: ( index ) ->
-
 			down= index < 0
 			if not @interval
 				index= @setCurrent index
 				@interval= setInterval =>
 					if down
-						@call @prev()
+						@lastCallResult= @call @prev()
 					else
-						@call @next()
+						@lastCallResult= @call @next()
 				, @delay
 
 
@@ -242,8 +263,8 @@ class States
 if define? and ( 'function' is typeof define ) and define.amd
 	define 'states', [], -> States
 
-else if typeof module isnt 'undefined'
+else if module?
 	module.exports= States
 
-else if typeof window isnt 'undefined'
+else if window?
 	window.States= States
