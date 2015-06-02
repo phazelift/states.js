@@ -37,7 +37,7 @@
       this.stepSize = _.forceNumber(init['stepSize'], 1);
       this.range = 1;
       this.setMax(init['max'] || this.min);
-      this.setPattern(init['pattern'], ALL_PATTERNS[0]);
+      this.setPattern(init['pattern'] || ALL_PATTERNS[0]);
       this.up = _.forceBoolean(init['up'], true);
       this.delay = _.forceNumber(init['delay'], 1000);
       this.events = {};

@@ -69,7 +69,7 @@ class States
 			@setMax init['max'] or @min
 
 			# @pattern defaults to 'limit'
-			@setPattern( init['pattern'], ALL_PATTERNS[0] )
+			@setPattern( init['pattern'] || ALL_PATTERNS[0] )
 
 			@up						= _.forceBoolean init['up'], true
 
